@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Чат</title>
+</head>
+<body>
+<h1>chat</h1>
+<form action="" onsubmit="sendMessage(event)">
+    <input type="text" id="messageText" autocomplete="off"/>
+    <button>Send</button>
+</form>
+
+<ul id='messages'>
+</ul>
+
+<script>
+
+    let ws = new WebSocket("ws://127.0.0.1:8000/ws");
+    let identity = 0
+    ws.onmessage = function(event) {
+        let messages = document.getElementById('messages')
+        let amessage = document.createElement('li');
+        console.log(event.data, typeof (event.data), 2222)
+        let receiveJson = JSON.parse(event.data);
+        console.log(receiveJson, typeof (receiveJson), 333);
+        let content = document.createTextNode(`${receiveJson.content}`);
+
+         if(receiveJson.client_id){
+             identity = receiveJson.client_id
+         }
+         else if (receiveJson.id === "server" && receiveJson.message === "ping") {
+            let message = {"id": identity, "message": "pong"};
+            let messageJson = JSON.stringify(message);
+            ws.send(messageJson)
+         }
+         else if (receiveJson.message !== "pong" || receiveJson.message !== "ping" ) {
+             amessage.appendChild(content)
+             messages.appendChild(amessage)
+         }
+    };
+    function sendMessage(event) {
+        var input = document.getElementById("messageText")
+        input = JSON.stringify({content: `${input.value}`})
+        ws.send(input)
+        input.value = ''
+        event.preventDefault()
+        amessage.appendChild(content)
+        messages.appendChild(amessage)
+    }
+
+</script>
+
+</body>
+</html>
